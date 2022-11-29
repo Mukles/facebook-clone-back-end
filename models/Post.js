@@ -6,7 +6,7 @@ const PostShema = new mongoose.Schema(
       type: String,
       require: true,
     },
-    desc: {
+    caption: {
       type: String,
       max: 500,
     },

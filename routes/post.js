@@ -1,18 +1,11 @@
 const Post = require("../models/post");
 const User = require("../models/User");
 const router = require("express").Router();
+const { postAdd } = require("../controllers/postController");
+const upload = require("../middleware/fileUpload");
 
 //CREATE NEW POST
-router.post("/", async (req, res) => {
-  try {
-    const { userId, desc, img } = req.body;
-    const newPost = new Post({ userId, desc, img });
-    const post = await newPost.save();
-    res.status(200).json(post);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+router.post("/add", upload("post").fields("img"), postAdd);
 
 //UPDATE POST
 router.put("/post/:id", async (req, res) => {
@@ -28,7 +21,6 @@ router.put("/post/:id", async (req, res) => {
 });
 
 // GET POST
-
 router.get(":/id", async (req, res) => {
   const { id } = req.params;
 

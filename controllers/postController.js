@@ -3,6 +3,7 @@ const Post = require("../models/Post");
 
 const postAdd = async (req, res) => {
   const { email } = req.params;
+  console.log(req.body);
 
   try {
     const user = await User.findOne({ email });
@@ -40,4 +41,4 @@ const postUpdate = async (req, res) => {
   }
 };
 
-module.export = { postAdd, postUpdate };
+module.exports = { postAdd, postUpdate };
