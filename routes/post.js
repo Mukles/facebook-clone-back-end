@@ -5,7 +5,7 @@ const { postAdd } = require("../controllers/postController");
 const upload = require("../middleware/fileUpload");
 
 //CREATE NEW POST
-router.post("/add", upload("post").fields("img"), postAdd);
+router.post("/add", upload("post").single("img"), postAdd);
 
 //UPDATE POST
 router.put("/post/:id", async (req, res) => {

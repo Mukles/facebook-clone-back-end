@@ -5,10 +5,9 @@ const signInAndSignUp = async (req, res) => {
 
   try {
     const query = await User.findOne({ email })
-      .select({ email: 1, userName: 1, dateOfBrith: 1, isAdmin: 1, _id: 0 })
+      .select({ email: 1, userName: 1, dateOfBrith: 1, isAdmin: 1 })
       .exec();
     if (query) {
-      console.log("I am already exits");
       res.status(200).json({ user: query });
     } else {
       const firstName = req.body.user?.firstName;
@@ -17,6 +16,8 @@ const signInAndSignUp = async (req, res) => {
         ...req.body.user,
         userName: req.body.user.usrName || firstName + " " + lastName,
       }).save();
+
+      console.log(result);
 
       const user = {
         userName: result.userName,

@@ -7,7 +7,7 @@ const cors = require("cors");
 const authRoute = require("./routes/auth");
 const authCheck = require("./middleware/authCheck");
 const userRoute = require("./routes/user");
-const postRoute = require("./routes/user");
+const postRoute = require("./routes/post");
 const { port, cookie_secret, mongoUrl } = require("./config");
 const {
   errorHandler,

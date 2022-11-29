@@ -2,19 +2,21 @@ const User = require("../models/user");
 const Post = require("../models/Post");
 
 const postAdd = async (req, res) => {
-  const { email } = req.params;
-  console.log(req.body);
+  const { email } = req.body;
 
   try {
     const user = await User.findOne({ email });
     if (user) {
-      const post = await new Post({ ...req.body }).save();
+      const post = await new Post({
+        ...req.body,
+        img: req.file.filename,
+      }).save();
       res.status(200).json({ message: "post added!", post });
     } else {
       res.status(400).json({ message: "User not found!" });
     }
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message, me: "djflaj" });
   }
 };
 
