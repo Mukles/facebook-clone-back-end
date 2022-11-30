@@ -9,6 +9,7 @@ const clientUrl = process.env.CLIENT_URL;
 const cookie_secret = process.env.COOKIE_SECRET;
 const jwt_secret = process.env.JWT_SECRET;
 
+console.log(clientUrl);
 module.exports = {
   port,
   mongoUrl,

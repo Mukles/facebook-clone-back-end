@@ -12,7 +12,7 @@ const signInAndSignUp = async (req, res) => {
     } else {
       const firstName = req.body.user?.firstName;
       const lastName = req.body.user?.lastName;
-      const result = await new User({
+      const result = await User({
         ...req.body.user,
         userName: req.body.user.usrName || firstName + " " + lastName,
       }).save();

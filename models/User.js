@@ -53,6 +53,12 @@ const userShema = new mongoose.Schema(
       type: String,
       enum: ["M", "O", "F"],
     },
+    posts: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
   },
   { timestamps: true }
 );

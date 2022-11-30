@@ -3,7 +3,8 @@ const { default: mongoose } = require("mongoose");
 const PostShema = new mongoose.Schema(
   {
     userId: {
-      type: String,
+      type: mongoose.Types.ObjectId,
+      ref: "User",
       require: true,
     },
     caption: {

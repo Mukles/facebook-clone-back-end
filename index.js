@@ -4,11 +4,12 @@ const mongoose = require("mongoose");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cors = require("cors");
+const path = require("path");
 const authRoute = require("./routes/auth");
 const authCheck = require("./middleware/authCheck");
 const userRoute = require("./routes/user");
 const postRoute = require("./routes/post");
-const { port, cookie_secret, mongoUrl } = require("./config");
+const { port, cookie_secret, mongoUrl, clientUrl } = require("./config");
 const {
   errorHandler,
   notFoundHandler,
@@ -30,11 +31,15 @@ app.use(
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: clientUrl,
     methods: "GET,POST,PUT,DELETE, PATCH",
     credentials: true,
   })
 );
+
+// set static folder
+app.use(express.static(path.join(__dirname, "uploads")));
+
 app.use(authCheck);
 app.use("/api/user", userRoute);
 app.use("/api/post", postRoute);

@@ -8,9 +8,11 @@ const postAdd = async (req, res) => {
     const user = await User.findOne({ email });
     if (user) {
       const post = await new Post({
+        userId: user._id,
         ...req.body,
-        img: req.file.filename,
+        img: "post/" + req.file.filename,
       }).save();
+      await User.updateOne({ _Id: user._id }, { $push: { posts: post._id } });
       res.status(200).json({ message: "post added!", post });
     } else {
       res.status(400).json({ message: "User not found!" });
