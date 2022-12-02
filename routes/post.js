@@ -1,11 +1,21 @@
 const Post = require("../models/post");
 const User = require("../models/User");
 const router = require("express").Router();
-const { postAdd } = require("../controllers/postController");
+const {
+  postAdd,
+  getTimeline,
+  deletePost,
+} = require("../controllers/postController");
 const upload = require("../middleware/fileUpload");
 
 //CREATE NEW POST
 router.post("/add", upload("post").single("img"), postAdd);
+
+//DELETE POST
+router.delete("/:id", deletePost);
+
+//Timeline
+router.get("/", getTimeline);
 
 //UPDATE POST
 router.put("/post/:id", async (req, res) => {
@@ -51,19 +61,8 @@ router.put("/:id/like", async (req, res) => {
   }
 });
 
-//DELETE POST
-router.delete("/post/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    await Post.deleteOne({ _id: id });
-    res.status(200).json({ message: "post deleted" });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
 //TIMELINE
-router.get("/timeline", async (req, res) => {
+router.get("/newsfeed", async (req, res) => {
   const { userId } = req.body;
 
   try {

@@ -18,7 +18,11 @@ const app = express();
 
 //middleware
 app.use(express.json());
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 app.use(morgan("common"));
 
 app.use(
