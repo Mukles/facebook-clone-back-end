@@ -5,30 +5,23 @@ const {
   postAdd,
   getTimeline,
   deletePost,
+  postUpdateWithImg,
+  postUpdateWithoutImg,
 } = require("../controllers/postController");
 const upload = require("../middleware/fileUpload");
 
 //CREATE NEW POST
 router.post("/add", upload("post").single("img"), postAdd);
 
+//UPDATE POST
+router.put("/:id", upload("/post").none(), postUpdateWithoutImg);
+router.patch("/:id", upload("post").single("img"), postUpdateWithImg);
+
 //DELETE POST
 router.delete("/:id", deletePost);
 
 //Timeline
 router.get("/", getTimeline);
-
-//UPDATE POST
-router.put("/post/:id", async (req, res) => {
-  const { id } = req.params.id;
-  const { tite, img, desc } = req.body;
-  try {
-    const post = await Post.findById(id);
-    await post.updateOne({ $set: { tite, img, desc } });
-    res.status(200).json({ message: "The post has been updated" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
 
 // GET POST
 router.get(":/id", async (req, res) => {

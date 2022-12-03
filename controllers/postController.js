@@ -1,6 +1,7 @@
 const User = require("../models/user");
 const Post = require("../models/Post");
 const { default: mongoose } = require("mongoose");
+const { updateOne } = require("../models/user");
 
 //ADD NEW POST
 const postAdd = async (req, res) => {
@@ -19,23 +20,58 @@ const postAdd = async (req, res) => {
           "/post/" +
           req.file.filename,
       }).save();
-      await User.updateOne({ _Id: user._id }, { $push: { posts: post._id } });
+      await User.updateOne({ _id: user._id }, { $push: { posts: post._id } });
       res.status(200).json({ message: "post added!", post });
     } else {
       res.status(400).json({ message: "User not found!" });
     }
   } catch (err) {
-    res.status(500).json({ message: err.message, me: "djflaj" });
+    res.status(500).json({ message: err.message });
+  }
+};
+
+//EDIT POST
+const postUpdateWithoutImg = async (req, res) => {
+  const id = req.params.id;
+  const userId = req.body.userId;
+  console.log("body", req.body.caption);
+  try {
+    const post = await Post.findOneAndUpdate(
+      { _id: id, userId },
+      { $set: { ...req.body } }
+    );
+    res.status(200).json({ message: "post updated!", post });
+  } catch (error) {
+    res.status(200).json({ message: error.message });
+  }
+};
+
+const postUpdateWithImg = async (req, res) => {
+  const id = req.params.id;
+  const userId = req.body.userId;
+  try {
+    const post = await Post.findOne(
+      { _id: id, userId },
+      {
+        ...req.body,
+        img:
+          req.protocol +
+          "://" +
+          req.headers.host +
+          "/post/" +
+          req.file.filename,
+      }
+    );
+    res.status(200).json({ message: "post updated!", post });
+  } catch (error) {
+    res.status(200).json({ message: error.message });
   }
 };
 
 //DELETE POST
 const deletePost = async (req, res) => {
-  console.log("I am delete here");
   try {
-    console.log("dfjladsjf", req.params.id);
     const postId = mongoose.Types.ObjectId(req.params.id);
-    console.log(postId);
     const { userId } = req.body;
     const post = await Post.aggregate([
       {
@@ -74,27 +110,10 @@ const getTimeline = async (req, res) => {
   }
 };
 
-const postUpdate = async (req, res) => {
-  const { email } = req.body;
-  const { id } = req.params;
-  const user = await User.findOne({ email });
-  const post = await Post.findOne(id);
-
-  try {
-    if (user && post) {
-      const post = await User.findOneAndUpdate({ email }, { ...req.body });
-      res.status(200).json({ message: "post added!", post });
-    } else {
-      res.status(200).json({ message: "Inernal error!" });
-    }
-  } catch (err) {
-    if (user && post) {
-      const post = await User.findOneAndUpdate({ email }, { ...req.body });
-      res.status(200).json({ message: "post added!", post });
-    } else {
-      res.status(200).json({ message: err.message });
-    }
-  }
+module.exports = {
+  postAdd,
+  postUpdateWithImg,
+  postUpdateWithoutImg,
+  getTimeline,
+  deletePost,
 };
-
-module.exports = { postAdd, postUpdate, getTimeline, deletePost };
