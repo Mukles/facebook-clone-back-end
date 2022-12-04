@@ -33,12 +33,12 @@ const postAdd = async (req, res) => {
 //EDIT POST
 const postUpdateWithoutImg = async (req, res) => {
   const id = req.params.id;
-  const userId = req.body.userId;
-  console.log("body", req.body.caption);
+  const { userId, img, caption } = req.body || {};
+
   try {
     const post = await Post.findOneAndUpdate(
       { _id: id, userId },
-      { $set: { ...req.body } }
+      { $set: { caption, img: JSON.parse(img) } }
     );
     res.status(200).json({ message: "post updated!", post });
   } catch (error) {
@@ -48,18 +48,20 @@ const postUpdateWithoutImg = async (req, res) => {
 
 const postUpdateWithImg = async (req, res) => {
   const id = req.params.id;
-  const userId = req.body.userId;
+  const { userId, caption } = req.body || {};
   try {
-    const post = await Post.findOne(
+    const post = await Post.findOneAndUpdate(
       { _id: id, userId },
       {
-        ...req.body,
-        img:
-          req.protocol +
-          "://" +
-          req.headers.host +
-          "/post/" +
-          req.file.filename,
+        $set: {
+          caption,
+          img:
+            req.protocol +
+            "://" +
+            req.headers.host +
+            "/post/" +
+            req.file.filename,
+        },
       }
     );
     res.status(200).json({ message: "post updated!", post });
