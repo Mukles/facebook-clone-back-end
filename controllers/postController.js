@@ -72,23 +72,11 @@ const postUpdateWithImg = async (req, res) => {
 
 //DELETE POST
 const deletePost = async (req, res) => {
+  const userId = req.body?.userId;
+  const postId = req.params?.id;
   try {
-    const postId = mongoose.Types.ObjectId(req.params.id);
-    const { userId } = req.body;
-    const post = await Post.aggregate([
-      {
-        $match: {
-          $and: [{ _id: postId }, { userId: mongoose.Types.ObjectId(userId) }],
-        },
-      },
-    ]);
-
-    if (post) {
-      await Post.deleteOne({ _id: req.params.id });
-      res.status(200).json({ message: "deleted successfully." });
-    } else {
-      res.status(500).json({ message: "Post not found!" });
-    }
+    const deltedPost = await Post.findOneAndDelete({ _id: postId, userId });
+    res.status(200).json({ message: "deleted successfully." });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
