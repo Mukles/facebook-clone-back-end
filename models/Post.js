@@ -7,6 +7,10 @@ const PostShema = new mongoose.Schema(
       ref: "User",
       require: true,
     },
+    title: {
+      type: String,
+      max: 500,
+    },
     caption: {
       type: String,
       max: 500,

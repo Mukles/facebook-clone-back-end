@@ -14,7 +14,7 @@ const upload = require("../middleware/fileUpload");
 router.post("/add", upload("post").single("img"), postAdd);
 
 //UPDATE POST
-router.put("/:id", upload("").none(), postUpdateWithoutImg);
+router.put("/:id", upload("post").none(), postUpdateWithoutImg);
 router.patch("/:id", upload("post").single("img"), postUpdateWithImg);
 
 //DELETE POST

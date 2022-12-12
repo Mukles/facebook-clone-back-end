@@ -9,21 +9,32 @@ const postAdd = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (user) {
+    if (req.file !== undefined) {
+      if (user) {
+        const post = await new Post({
+          userId: user._id,
+          ...req.body,
+          img:
+            req.protocol +
+            "://" +
+            req.headers.host +
+            "/post/" +
+            req.file.filename,
+        }).save();
+        await User.updateOne({ _id: user._id }, { $push: { posts: post._id } });
+        res.status(200).json({ message: "post added!", post });
+      } else {
+        res.status(400).json({ message: "User not found!" });
+      }
+    } else {
       const post = await new Post({
         userId: user._id,
         ...req.body,
-        img:
-          req.protocol +
-          "://" +
-          req.headers.host +
-          "/post/" +
-          req.file.filename,
+        img: null,
       }).save();
       await User.updateOne({ _id: user._id }, { $push: { posts: post._id } });
+      console.log("file not uploaded");
       res.status(200).json({ message: "post added!", post });
-    } else {
-      res.status(400).json({ message: "User not found!" });
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -85,16 +96,18 @@ const deletePost = async (req, res) => {
 //GET MY TIMELINE
 const getTimeline = async (req, res) => {
   const { userId, email } = req.query;
-  console.log(req.headers.host);
 
   try {
-    const user = await User.findOne({ _id: userId });
-    if (user) {
-      const posts = await user.populate("posts");
-      res.status(200).json(posts.posts);
-    } else {
-      res.status(500).json({ message: "user not found!" });
-    }
+    const posts = await Post.aggregate([
+      { $match: { userId: mongoose.Types.ObjectId(userId) } },
+      { $sort: { createdAt: -1 } },
+      { $skip: 0 },
+      { $limit: 5 },
+    ]);
+
+    console.log(posts);
+
+    res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -1,6 +1,8 @@
 const User = require("../models/user");
 const router = require("express").Router();
 const bcrypt = require("bcrypt");
+const { changeCover } = require("../controllers/userController");
+const upload = require("../middleware/fileUpload");
 
 //UPDATE USER
 router.put("/:id", async (req, res) => {
@@ -77,5 +79,8 @@ router.put("/follow/:id", async (req, res) => {
     res.status(403).json({ message: "You can't follow yourself" });
   }
 });
+
+//CHNAGED COVER
+router.post("/cover", upload("cover").single("coverPhoto"), changeCover);
 
 module.exports = router;

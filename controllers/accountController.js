@@ -5,7 +5,7 @@ const signInAndSignUp = async (req, res) => {
 
   try {
     const query = await User.findOne({ email })
-      .select({ email: 1, userName: 1, dateOfBrith: 1, isAdmin: 1 })
+      .select({ posts: 0, provider: 0 })
       .exec();
     if (query) {
       res.status(200).json({ user: query });

@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const Post = require("../models/Post");
 
 const deleteUser = async (req, res) => {
   try {
@@ -32,4 +33,40 @@ const updateUser = async (req, res) => {
   }
 };
 
-module.exports = { deleteUser, updateUser };
+const changeCover = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    const title =
+      user.gender === "male"
+        ? "updated his profile picture"
+        : "updated her profile picture";
+
+    const newPost = await new Post({
+      ...req.body,
+      title,
+      userId: user._id,
+      img:
+        req.protocol + "://" + req.headers.host + "/cover/" + req.file.filename,
+    }).save();
+    await User.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          converPicture:
+            req.protocol +
+            "://" +
+            req.headers.host +
+            "/cover/" +
+            req.file.filename,
+        },
+      },
+      { $push: { posts: newPost._id } }
+    );
+    res.status(200).json({ post: newPost, user });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { deleteUser, updateUser, changeCover };
