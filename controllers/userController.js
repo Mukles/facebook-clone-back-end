@@ -39,8 +39,8 @@ const changeCover = async (req, res) => {
     const user = await User.findOne({ email });
     const title =
       user.gender === "male"
-        ? "updated his profile picture"
-        : "updated her profile picture";
+        ? "updated his cover picture"
+        : "updated her cover picture";
 
     const newPost = await new Post({
       ...req.body,

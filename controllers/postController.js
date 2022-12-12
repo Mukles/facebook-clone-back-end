@@ -103,9 +103,29 @@ const getTimeline = async (req, res) => {
       { $sort: { createdAt: -1 } },
       { $skip: 0 },
       { $limit: 5 },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: "$user",
+      },
+      {
+        $project: {
+          userId: 0,
+          "user.isAdmin": 0,
+          "user.posts": 0,
+          "user.provider": 0,
+          "user.updatedAt": 0,
+          "user.createdAt": 0,
+          "user.converPicture": 0,
+        },
+      },
     ]);
-
-    console.log(posts);
 
     res.status(200).json(posts);
   } catch (error) {
