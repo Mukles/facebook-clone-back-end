@@ -8,7 +8,19 @@ const postAdd = async (req, res) => {
   const { email } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne(
+      { email },
+      {
+        dateOfBrith: 0,
+        converPicture: 0,
+        provider: 0,
+        isAdmin: 0,
+        desc: 0,
+        relationShip: 0,
+        gender: 0,
+        posts: 0,
+      }
+    );
     if (req.file !== undefined) {
       if (user) {
         const post = await new Post({
@@ -22,7 +34,7 @@ const postAdd = async (req, res) => {
             req.file.filename,
         }).save();
         await User.updateOne({ _id: user._id }, { $push: { posts: post._id } });
-        res.status(200).json({ message: "post added!", post });
+        res.status(200).json({ message: "post added!", post, user });
       } else {
         res.status(400).json({ message: "User not found!" });
       }
@@ -33,8 +45,7 @@ const postAdd = async (req, res) => {
         img: null,
       }).save();
       await User.updateOne({ _id: user._id }, { $push: { posts: post._id } });
-      console.log("file not uploaded");
-      res.status(200).json({ message: "post added!", post });
+      res.status(200).json({ message: "post added!", post, user });
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -49,7 +60,8 @@ const postUpdateWithoutImg = async (req, res) => {
   try {
     const post = await Post.findOneAndUpdate(
       { _id: id, userId },
-      { $set: { caption, img: JSON.parse(img) } }
+      { $set: { caption, img: JSON.parse(img) } },
+      { returnOriginal: false }
     );
     res.status(200).json({ message: "post updated!", post });
   } catch (error) {

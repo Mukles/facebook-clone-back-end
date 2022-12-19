@@ -1,34 +1,15 @@
 const User = require("../models/user");
 const router = require("express").Router();
 const bcrypt = require("bcrypt");
-const { changeCover } = require("../controllers/userController");
+const {
+  changeCover,
+  changeProfile,
+  updateUser,
+} = require("../controllers/userController");
 const upload = require("../middleware/fileUpload");
 
 //UPDATE USER
-router.put("/:id", async (req, res) => {
-  const { userId, password } = req.body;
-  const { id } = req.params;
-
-  if (userId === id || req.user.isAdmin) {
-    if (password) {
-      try {
-        const slat = await bcrypt.genSalt(10);
-        password = await bcrypt.hash(password, slat);
-      } catch (err) {
-        res.status(500).json({ message: err.message });
-      }
-    }
-
-    try {
-      const user = await User.findOneAndUpdate(id, { $set: req.body });
-      res.status(200).json({ message: "Account has been updated" });
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
-  } else {
-    res.status(403).json({ message: "You can update only your account" });
-  }
-});
+router.put("/:id", updateUser);
 
 //DELETE USER
 router.delete("/:id", async (req, res) => {
@@ -82,5 +63,12 @@ router.put("/follow/:id", async (req, res) => {
 
 //CHNAGED COVER
 router.post("/cover", upload("cover").single("coverPhoto"), changeCover);
+
+//CHNAGED PROFILE
+router.post(
+  "/profile",
+  upload("profile").single("profilePhoto"),
+  changeProfile
+);
 
 module.exports = router;
