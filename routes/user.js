@@ -1,15 +1,19 @@
 const User = require("../models/user");
 const router = require("express").Router();
-const bcrypt = require("bcrypt");
 const {
   changeCover,
   changeProfile,
   updateUser,
+  suggestionFriends,
 } = require("../controllers/userController");
 const upload = require("../middleware/fileUpload");
+const { json } = require("express");
 
 //UPDATE USER
 router.put("/:id", updateUser);
+
+//SUGGESTION FRIENDS
+router.get("/suggestions/", suggestionFriends);
 
 //DELETE USER
 router.delete("/:id", async (req, res) => {

@@ -7,7 +7,7 @@ const signInAndSignUp = async (req, res) => {
     const query = await User.findOne({ email }, { posts: 0, provider: 0 });
 
     if (query) {
-      res.status(200).json({ user: query });  
+      res.status(200).json({ user: query });
     } else {
       const firstName = user?.firstName;
       const lastName = user?.lastName;
@@ -20,6 +20,7 @@ const signInAndSignUp = async (req, res) => {
         userName: result.userName,
         email: result.email,
         dateOfBrith: result.dateOfBrith,
+        gender: result.gender,
         isAdmin: result.isAdmin,
       };
 

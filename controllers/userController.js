@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const Post = require("../models/Post");
+const { default: mongoose } = require("mongoose");
 
 const updateUser = async (req, res) => {
   const userId = req.params.id;
@@ -54,6 +55,7 @@ const changeCover = async (req, res) => {
       img:
         req.protocol + "://" + req.headers.host + "/cover/" + req.file.filename,
     }).save();
+
     const updatedUser = await User.findByIdAndUpdate(
       user._id,
       {
@@ -73,6 +75,7 @@ const changeCover = async (req, res) => {
     )
       .select({
         dateOfBrith: 0,
+        profilePicture: 0,
         provider: 0,
         isAdmin: 0,
         desc: 0,
@@ -81,8 +84,11 @@ const changeCover = async (req, res) => {
         posts: 0,
       })
       .exec();
+
+    console.log(updateUser);
     res.status(200).json({ post: newPost, user: updatedUser });
   } catch (err) {
+    console.log(err.message);
     res.status(500).json({ message: err.message });
   }
 };
@@ -138,9 +144,39 @@ const changeProfile = async (req, res) => {
       .exec();
     res.status(200).json({ post: newPost, user: updatedUser });
   } catch (err) {
-    console.log(err.message);
     res.status(500).json({ message: err.message });
   }
 };
 
-module.exports = { deleteUser, changeCover, changeProfile, updateUser };
+const suggestionFriends = async (req, res) => {
+  try {
+    console.log("UserId", req.query);
+    const { userId } = req.query || {};
+    console.log("params", userId);
+    const friends = await User.aggregate([
+      { $match: { _id: { $ne: userId } } },
+      {
+        $project: { posts: 0, provider: 0 },
+      },
+      {
+        $skip: 0,
+      },
+      {
+        $limit: 5,
+      },
+    ]);
+
+    res.status(200).json(friends);
+  } catch (error) {
+    console.log("error", "I am errer");
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = {
+  deleteUser,
+  changeCover,
+  changeProfile,
+  updateUser,
+  suggestionFriends,
+};
