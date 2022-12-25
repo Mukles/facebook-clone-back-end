@@ -5,6 +5,10 @@ const {
   changeProfile,
   updateUser,
   suggestionFriends,
+  sendFriendRequest,
+  cancelFriendRequest,
+  getRequestList,
+  accpectFriendRequest,
 } = require("../controllers/userController");
 const upload = require("../middleware/fileUpload");
 const { json } = require("express");
@@ -34,9 +38,11 @@ router.delete("/:id", async (req, res) => {
 //GET USER
 router.get("/:id", async (req, res) => {
   try {
-    const user = await User.findOne(req.body.userId);
-    const { password, updateAt, ...other } = user._doc;
-    res.status(200).json(other);
+    const user = await User.findOne(
+      { _id: req.params.id },
+      { posts: 0, provider: 0 }
+    );
+    res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -74,5 +80,14 @@ router.post(
   upload("profile").single("profilePhoto"),
   changeProfile
 );
+
+//FRIEND REQUEST
+router.post("/request/friend/:requestId", sendFriendRequest);
+//CANCEL FRIEND REQUEST
+router.put("/cancel/friend/:requestId", cancelFriendRequest);
+//GET FIREND REQUEST LIST
+router.get("/requestlist/:currentUserId", getRequestList);
+//ACCEPT FIREND REQUEST LIST
+router.put("/request/accept/:requestId", accpectFriendRequest);
 
 module.exports = router;

@@ -1,6 +1,11 @@
 const User = require("../models/user");
 const Post = require("../models/Post");
-const { default: mongoose } = require("mongoose");
+const FriendRequest = require("../models/friendRequest");
+const { default: mongoose, mongo } = require("mongoose");
+const uuid = require("uuid");
+
+// Generate a new UUID
+const newId = uuid.v4();
 
 const updateUser = async (req, res) => {
   const userId = req.params.id;
@@ -150,11 +155,9 @@ const changeProfile = async (req, res) => {
 
 const suggestionFriends = async (req, res) => {
   try {
-    console.log("UserId", req.query);
     const { userId } = req.query || {};
-    console.log("params", userId);
     const friends = await User.aggregate([
-      { $match: { _id: { $ne: userId } } },
+      { $match: { _id: { $ne: mongoose.Types.ObjectId(userId) } } },
       {
         $project: { posts: 0, provider: 0 },
       },
@@ -168,8 +171,75 @@ const suggestionFriends = async (req, res) => {
 
     res.status(200).json(friends);
   } catch (error) {
-    console.log("error", "I am errer");
     res.status(500).json({ message: err.message });
+  }
+};
+
+const sendFriendRequest = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const { requestId } = req.params;
+    const newRequest = await new FriendRequest({
+      sender: userId,
+      recipient: requestId,
+      status: "pending",
+    }).save();
+
+    res.status(200).json({ message: "request sent successful", newRequest });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const cancelFriendRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    await FriendRequest.updateOne(
+      { _id: requestId },
+      { $set: { status: "cancelled" } }
+    );
+    res.status(200).json({ message: "friend request canceled successfullly!" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const accpectFriendRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params || {};
+    await FriendRequest.findOneAndUpdate(
+      { _id: requestId },
+      { $set: { status: "accepted" } }
+    );
+    res.status(200).json({ message: "Request accepted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getRequestList = async (req, res) => {
+  try {
+    const { currentUserId } = req.params;
+    const receivedRequest = await FriendRequest.aggregate([
+      {
+        $match: {
+          recipient: mongoose.Types.ObjectId(currentUserId),
+          status: "pending",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "sender",
+          foreignField: "_id",
+          as: "user_details",
+        },
+      },
+    ]);
+
+    res.status(200).json(receivedRequest);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -179,4 +249,8 @@ module.exports = {
   changeProfile,
   updateUser,
   suggestionFriends,
+  sendFriendRequest,
+  cancelFriendRequest,
+  getRequestList,
+  accpectFriendRequest,
 };
