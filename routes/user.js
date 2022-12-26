@@ -9,6 +9,8 @@ const {
   cancelFriendRequest,
   getRequestList,
   accpectFriendRequest,
+  getUser,
+  deleteFriendRequest,
 } = require("../controllers/userController");
 const upload = require("../middleware/fileUpload");
 const { json } = require("express");
@@ -36,17 +38,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 //GET USER
-router.get("/:id", async (req, res) => {
-  try {
-    const user = await User.findOne(
-      { _id: req.params.id },
-      { posts: 0, provider: 0 }
-    );
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+router.get("/:id", getUser);
 
 //FOLLOW USER
 router.put("/follow/:id", async (req, res) => {
@@ -83,11 +75,17 @@ router.post(
 
 //FRIEND REQUEST
 router.post("/request/friend/:requestId", sendFriendRequest);
+
 //CANCEL FRIEND REQUEST
 router.put("/cancel/friend/:requestId", cancelFriendRequest);
+
 //GET FIREND REQUEST LIST
 router.get("/requestlist/:currentUserId", getRequestList);
-//ACCEPT FIREND REQUEST LIST
+
+//ACCEPT FIREND REQUEST
 router.put("/request/accept/:requestId", accpectFriendRequest);
+
+//DELELE FIREND REQUEST
+router.delete("/request/delete/:requestId", deleteFriendRequest);
 
 module.exports = router;

@@ -1,11 +1,19 @@
 const User = require("../models/user");
 const Post = require("../models/Post");
 const FriendRequest = require("../models/friendRequest");
-const { default: mongoose, mongo } = require("mongoose");
-const uuid = require("uuid");
+const { default: mongoose } = require("mongoose");
 
-// Generate a new UUID
-const newId = uuid.v4();
+const getUser = async (req, res) => {
+  try {
+    const user = await User.findOne(
+      { _id: req.params.id },
+      { posts: 0, provider: 0 }
+    );
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 const updateUser = async (req, res) => {
   const userId = req.params.id;
@@ -156,22 +164,52 @@ const changeProfile = async (req, res) => {
 const suggestionFriends = async (req, res) => {
   try {
     const { userId } = req.query || {};
-    const friends = await User.aggregate([
-      { $match: { _id: { $ne: mongoose.Types.ObjectId(userId) } } },
+
+    // Find users who are not the recipient of any friend requests
+    const users = await User.aggregate([
       {
-        $project: { posts: 0, provider: 0 },
+        $lookup: {
+          from: "friendrequests", // The collection to join with
+          let: { userId: "$_id" }, // Define a variable for the user's _id field
+          pipeline: [
+            // Match friend requests where the recipient field is equal to the user's _id field and the status field is not "pending"
+            {
+              $match: {
+                $and: [
+                  {
+                    $expr: {
+                      $eq: ["$recipient", "$$userId"],
+                    },
+                  },
+                  {
+                    status: { $eq: "pending" },
+                  },
+                ],
+              },
+            },
+          ],
+          as: "friendRequests", // The name of the array field in the output documents
+        },
       },
+      // Filter the joined documents to only include users who do not have any friend requests with a status other than "pending"
       {
-        $skip: 0,
+        $match: {
+          friendRequests: { $size: 0 },
+          _id: { $ne: mongoose.Types.ObjectId(userId) },
+        },
       },
+
+      // Remove the friendRequests field from the output documents
       {
-        $limit: 5,
+        $project: {
+          friendRequests: 0,
+        },
       },
     ]);
 
-    res.status(200).json(friends);
+    res.status(200).json(users);
   } catch (error) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -179,11 +217,17 @@ const sendFriendRequest = async (req, res) => {
   try {
     const { userId } = req.body;
     const { requestId } = req.params;
-    const newRequest = await new FriendRequest({
-      sender: userId,
-      recipient: requestId,
-      status: "pending",
-    }).save();
+    const newRequest = await FriendRequest.findOneAndUpdate(
+      {
+        recipient: requestId,
+        sender: userId,
+      },
+      { sender: userId, recipient: requestId, status: "pending" },
+      {
+        new: true,
+        upsert: true,
+      }
+    );
 
     res.status(200).json({ message: "request sent successful", newRequest });
   } catch (error) {
@@ -194,8 +238,13 @@ const sendFriendRequest = async (req, res) => {
 const cancelFriendRequest = async (req, res) => {
   try {
     const { requestId } = req.params;
-    await FriendRequest.updateOne(
-      { _id: requestId },
+    const { userId } = req.body;
+
+    await FriendRequest.findOneAndUpdate(
+      {
+        _id: mongoose.Types.ObjectId(requestId),
+        sender: mongoose.Types.ObjectId(userId),
+      },
       { $set: { status: "cancelled" } }
     );
     res.status(200).json({ message: "friend request canceled successfullly!" });
@@ -212,6 +261,20 @@ const accpectFriendRequest = async (req, res) => {
       { $set: { status: "accepted" } }
     );
     res.status(200).json({ message: "Request accepted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteFriendRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params || {};
+    const { userId } = req.body || {};
+    const d = await FriendRequest.findOneAndDelete({
+      _id: requestId,
+      recipient: userId,
+    });
+    res.status(200).json({ message: "Request deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -244,6 +307,7 @@ const getRequestList = async (req, res) => {
 };
 
 module.exports = {
+  getUser,
   deleteUser,
   changeCover,
   changeProfile,
@@ -253,4 +317,5 @@ module.exports = {
   cancelFriendRequest,
   getRequestList,
   accpectFriendRequest,
+  deleteFriendRequest,
 };

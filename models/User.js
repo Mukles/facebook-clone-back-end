@@ -18,38 +18,6 @@ const userShema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    friends: [
-      {
-        type: mongoose.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-    sentFriendsRequest: [
-      {
-        _id: {
-          type: String,
-          required: true,
-        },
-        ref: {
-          type: mongoose.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-      },
-    ],
-    receivedFriendsRequest: [
-      {
-        _id: {
-          type: String,
-          required: true,
-        },
-        ref: {
-          type: mongoose.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-      },
-    ],
     provider: {
       type: String,
     },
