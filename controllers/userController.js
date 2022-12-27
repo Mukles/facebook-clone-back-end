@@ -182,7 +182,10 @@ const suggestionFriends = async (req, res) => {
                     },
                   },
                   {
-                    status: { $eq: "pending" },
+                    status: { $in: ["pending", "accepted"] },
+                  },
+                  {
+                    sender: { $eq: mongoose.Types.ObjectId(userId) },
                   },
                 ],
               },
@@ -256,9 +259,15 @@ const cancelFriendRequest = async (req, res) => {
 const accpectFriendRequest = async (req, res) => {
   try {
     const { requestId } = req.params || {};
-    await FriendRequest.findOneAndUpdate(
+    const friend = await FriendRequest.findOneAndUpdate(
       { _id: requestId },
       { $set: { status: "accepted" } }
+    );
+    console.log("friend", friend);
+    console.log("id", friend.recipient);
+    await User.findOneAndUpdate(
+      { _id: friend.sender },
+      { $addToSet: { friends: friend.recipient } }
     );
     res.status(200).json({ message: "Request accepted" });
   } catch (error) {
@@ -295,12 +304,28 @@ const getRequestList = async (req, res) => {
           from: "users",
           localField: "sender",
           foreignField: "_id",
-          as: "user_details",
+          as: "sender_details",
         },
+      },
+      {
+        $project: { sender_details: 1, createdAt: 1 },
+      },
+      {
+        $unwind: "$sender_details",
       },
     ]);
 
     res.status(200).json(receivedRequest);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getRequestStatus = async (req, res) => {
+  try {
+    const { sender, recipient } = req.query;
+    const status = await FriendRequest.find({ sender, recipient });
+    res.status(200).json(status);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -318,4 +343,5 @@ module.exports = {
   getRequestList,
   accpectFriendRequest,
   deleteFriendRequest,
+  getRequestStatus,
 };

@@ -11,6 +11,7 @@ const {
   accpectFriendRequest,
   getUser,
   deleteFriendRequest,
+  getRequestStatus,
 } = require("../controllers/userController");
 const upload = require("../middleware/fileUpload");
 const { json } = require("express");
@@ -87,5 +88,8 @@ router.put("/request/accept/:requestId", accpectFriendRequest);
 
 //DELELE FIREND REQUEST
 router.delete("/request/delete/:requestId", deleteFriendRequest);
+
+//GET FIREND REQUEST STATUS
+router.delete("/request/status", getRequestStatus);
 
 module.exports = router;

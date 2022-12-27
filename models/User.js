@@ -18,6 +18,12 @@ const userShema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    friends: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     provider: {
       type: String,
     },
