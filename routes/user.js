@@ -12,9 +12,9 @@ const {
   getUser,
   deleteFriendRequest,
   getRequestStatus,
+  getNewsFeed,
 } = require("../controllers/userController");
 const upload = require("../middleware/fileUpload");
-const { json } = require("express");
 
 //UPDATE USER
 router.put("/:id", updateUser);
@@ -90,6 +90,9 @@ router.put("/request/accept/:requestId", accpectFriendRequest);
 router.delete("/request/delete/:requestId", deleteFriendRequest);
 
 //GET FIREND REQUEST STATUS
-router.delete("/request/status", getRequestStatus);
+router.get("/request/status", getRequestStatus);
+
+//GET NEWS FEED
+router.get("/newsfeed/:userId", getNewsFeed);
 
 module.exports = router;
