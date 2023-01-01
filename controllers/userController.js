@@ -2,6 +2,7 @@ const User = require("../models/user");
 const Post = require("../models/Post");
 const FriendRequest = require("../models/friendRequest");
 const { default: mongoose } = require("mongoose");
+const { request } = require("express");
 
 const getUser = async (req, res) => {
   try {
@@ -163,57 +164,64 @@ const changeProfile = async (req, res) => {
 
 const suggestionFriends = async (req, res) => {
   try {
-    const { userId } = req.query || {};
-
-    const users = await User.aggregate([
+    const { userId } = req.query;
+    User.aggregate([
       {
         $lookup: {
-          from: "friendrequests", // The collection to join with
-          let: { userId: "$_id" }, // Define a variable for the user's _id field
+          from: "friendRequests",
+          let: { user_id: mongoose.Types.ObjectId(userId) },
           pipeline: [
-            // Match friend requests where the recipient field is equal to the user's _id field or the sender field is equal to the user's _id field,
-            // and the status field is not "cancel"
             {
               $match: {
-                $and: [
-                  {
-                    $expr: {
+                $expr: {
+                  $and: [
+                    {
                       $or: [
-                        {
-                          $eq: ["$recipient", "$$userId"],
-                        },
-                        {
-                          $eq: ["$sender", "$$userId"],
-                        },
+                        { $eq: ["$sender", "$$user_id"] },
+                        { $eq: ["$recipient", "$$user_id"] },
                       ],
                     },
+                    {
+                      $not: {
+                        $or: [
+                          { $eq: ["$status", "pending"] },
+                          { $eq: ["$status", "accepted"] },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                sender: {
+                  $cond: {
+                    if: { $eq: ["$sender", "$$user_id"] },
+                    then: "$recipient",
+                    else: "$sender",
                   },
-                  {
-                    status: { $ne: "cancel" },
-                  },
-                ],
+                },
               },
             },
           ],
-          as: "friendRequests", // The name of the array field in the output documents
+          as: "requestIds",
         },
       },
-      // Filter the joined documents to only include users who do not have any friend requests with a status of "cancel"
-      // and who are not the current user or the user with the specified userId
+      {
+        $addFields: {
+          requestIds: { $ifNull: ["$requestIds.sender", []] },
+        },
+      },
       {
         $match: {
-          friendRequests: { $size: 0 },
-          _id: { $ne: mongoose.Types.ObjectId(userId) },
-        },
-      },
-      // Remove the friendRequests field from the output documents
-      {
-        $project: {
-          friendRequests: 0,
+          _id: { $nin: ["$requestIds", mongoose.Types.ObjectId(userId)] },
         },
       },
     ]);
-    res.status(200).json(users);
+
+    res.status(200).json(suggestionFriends);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -364,8 +372,25 @@ const getNewsFeed = async (req, res) => {
         $unwind: "$friendsPosts",
       },
       {
+        $lookup: {
+          from: "users",
+          localField: "friendsPosts.userId",
+          foreignField: "_id",
+          as: "friendsPosts.user",
+        },
+      },
+      {
+        $unwind: "$friendsPosts.user",
+      },
+      {
         $sort: {
           "friendsPosts.createdAt": -1,
+        },
+      },
+      {
+        $project: {
+          friendsPosts: 1,
+          _id: 0,
         },
       },
       {
@@ -377,6 +402,39 @@ const getNewsFeed = async (req, res) => {
     ]);
 
     res.status(200).json(latestPost);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getFriendList = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const friends = await User.aggregate([
+      {
+        $match: { _id: mongoose.Types.ObjectId(userId) },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "friends",
+          foreignField: "_id",
+          as: "friend_details",
+        },
+      },
+      {
+        $project: {
+          friend_details: {
+            userName: 1,
+            profilePicture: 1,
+            _id: 1,
+          },
+          _id: 0,
+        },
+      },
+    ]);
+
+    res.status(200).json(friends[0].friend_details);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -396,4 +454,5 @@ module.exports = {
   deleteFriendRequest,
   getRequestStatus,
   getNewsFeed,
+  getFriendList,
 };

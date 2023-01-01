@@ -17,6 +17,7 @@ const signInAndSignUp = async (req, res) => {
       }).save();
 
       const createdUser = {
+        _id: result.userName,
         userName: result.userName,
         email: result.email,
         dateOfBrith: result.dateOfBrith,

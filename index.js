@@ -9,6 +9,7 @@ const authRoute = require("./routes/auth");
 const authCheck = require("./middleware/authCheck");
 const userRoute = require("./routes/user");
 const postRoute = require("./routes/post");
+const conversationRoute = require("./routes/conversation");
 const { port, cookie_secret, mongoUrl, clientUrl } = require("./config");
 const {
   errorHandler,
@@ -48,6 +49,7 @@ app.use(authCheck);
 app.use("/api/user", userRoute);
 app.use("/api/post", postRoute);
 app.use("/api/auth", authRoute);
+app.use("/api/conversation", conversationRoute);
 
 async function main() {
   await mongoose.connect(mongoUrl);
