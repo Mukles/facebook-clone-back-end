@@ -10,6 +10,8 @@ const authCheck = require("./middleware/authCheck");
 const userRoute = require("./routes/user");
 const postRoute = require("./routes/post");
 const conversationRoute = require("./routes/conversation");
+const commentRoute = require("./routes/comment");
+
 const { port, cookie_secret, mongoUrl, clientUrl } = require("./config");
 const {
   errorHandler,
@@ -50,6 +52,7 @@ app.use("/api/user", userRoute);
 app.use("/api/post", postRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/conversation", conversationRoute);
+app.use("/api/comment", commentRoute);
 
 async function main() {
   await mongoose.connect(mongoUrl);

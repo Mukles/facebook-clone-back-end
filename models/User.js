@@ -65,6 +65,13 @@ const userShema = new mongoose.Schema(
         ref: "Post",
       },
     ],
+    details: {
+      work: [{ type: Object }],
+      study: [{ type: Object }],
+      university: [{ type: Object }],
+      currentCity: [{ type: Object }],
+      homeTown: [{ type: Object }],
+    },
   },
   { timestamps: true }
 );

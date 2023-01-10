@@ -98,7 +98,7 @@ const deletePost = async (req, res) => {
   const userId = req.body?.userId;
   const postId = req.params?.id;
   try {
-    const deltedPost = await Post.findOneAndDelete({ _id: postId, userId });
+    await Post.findOneAndDelete({ _id: postId, userId });
     res.status(200).json({ message: "deleted successfully." });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -107,7 +107,7 @@ const deletePost = async (req, res) => {
 
 //GET MY TIMELINE
 const getTimeline = async (req, res) => {
-  const { userId, email } = req.query;
+  const { userId } = req.query;
 
   try {
     const posts = await Post.aggregate([

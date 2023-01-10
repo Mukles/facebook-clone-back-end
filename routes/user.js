@@ -14,6 +14,7 @@ const {
   getRequestStatus,
   getNewsFeed,
   getFriendList,
+  updateDeails,
 } = require("../controllers/userController");
 const upload = require("../middleware/fileUpload");
 
@@ -98,5 +99,8 @@ router.get("/newsfeed/:userId", getNewsFeed);
 
 //GET ALL FRINEDS
 router.get("/friend-list/:userId", getFriendList);
+
+//PATCH USER
+router.patch("/about/:userId", updateDeails);
 
 module.exports = router;

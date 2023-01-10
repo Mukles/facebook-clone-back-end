@@ -2,7 +2,6 @@ const User = require("../models/user");
 const Post = require("../models/Post");
 const FriendRequest = require("../models/friendRequest");
 const { default: mongoose } = require("mongoose");
-const { request } = require("express");
 
 const getUser = async (req, res) => {
   try {
@@ -165,62 +164,23 @@ const changeProfile = async (req, res) => {
 const suggestionFriends = async (req, res) => {
   try {
     const { userId } = req.query;
-    User.aggregate([
-      {
-        $lookup: {
-          from: "friendRequests",
-          let: { user_id: mongoose.Types.ObjectId(userId) },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $or: [
-                        { $eq: ["$sender", "$$user_id"] },
-                        { $eq: ["$recipient", "$$user_id"] },
-                      ],
-                    },
-                    {
-                      $not: {
-                        $or: [
-                          { $eq: ["$status", "pending"] },
-                          { $eq: ["$status", "accepted"] },
-                        ],
-                      },
-                    },
-                  ],
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                sender: {
-                  $cond: {
-                    if: { $eq: ["$sender", "$$user_id"] },
-                    then: "$recipient",
-                    else: "$sender",
-                  },
-                },
-              },
-            },
-          ],
-          as: "requestIds",
-        },
-      },
-      {
-        $addFields: {
-          requestIds: { $ifNull: ["$requestIds.sender", []] },
-        },
-      },
-      {
-        $match: {
-          _id: { $nin: ["$requestIds", mongoose.Types.ObjectId(userId)] },
-        },
-      },
-    ]);
+    const requestList = await FriendRequest.find({
+      $or: [{ sender: userId }, { recipient: userId }],
+      status: { $in: ["pending", "accepted"] },
+    });
 
+    const requestIds = requestList.map((request) => {
+      const { sender, recipient } = request;
+      if (sender.toString() === userId) {
+        return recipient;
+      } else {
+        return sender;
+      }
+    });
+
+    const suggestionFriends = await User.find({
+      _id: { $nin: [...requestIds, userId] },
+    });
     res.status(200).json(suggestionFriends);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -440,6 +400,26 @@ const getFriendList = async (req, res) => {
   }
 };
 
+const updateDeails = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log("userId", userId);
+    const feild = Object.keys(req.body)[0];
+    const value = req.body[feild];
+    const update = { $addToSet: {} };
+    update.$addToSet["details." + feild] = value;
+
+    const user = await User.findOneAndUpdate({ _id: userId }, update, {
+      new: true,
+    });
+    const updatedDetails = user.details;
+
+    res.status(200).json(updatedDetails);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getUser,
   deleteUser,
@@ -455,4 +435,5 @@ module.exports = {
   getRequestStatus,
   getNewsFeed,
   getFriendList,
+  updateDeails,
 };
