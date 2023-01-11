@@ -6,7 +6,7 @@ const CommentSchema = new mongoose.Schema({
     ref: "Post",
     required: true,
   },
-  user_id: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
@@ -25,7 +25,10 @@ const CommentSchema = new mongoose.Schema({
   ],
   replies: [
     {
-      user_id: {
+      img: {
+        type: String,
+      },
+      user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
@@ -33,12 +36,7 @@ const CommentSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
-      likes: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-      ],
+
       created_at: {
         type: Date,
         default: Date.now,

@@ -14,6 +14,12 @@ const userShema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    bio: {
+      type: String,
+      require: true,
+      min: 30,
+      max: 200,
+    },
     converPicture: {
       type: String,
       default: "",

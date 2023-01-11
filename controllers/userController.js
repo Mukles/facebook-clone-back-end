@@ -33,7 +33,30 @@ const updateUser = async (req, res) => {
       })
       .exec();
     res.status(200).json({ user, message: "user updated sucessfully" });
-  } catch (error) {}
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const updateBio = async (req, res) => {
+  const { id: userId } = req.params || {};
+  const { bio } = req.body || {};
+
+  console.log({ userId, bio });
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: { bio },
+      },
+      { new: true }
+    );
+    console.log({ user });
+    res.status(200).json({ bio: user.bio });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 const deleteUser = async (req, res) => {
@@ -436,4 +459,5 @@ module.exports = {
   getNewsFeed,
   getFriendList,
   updateDeails,
+  updateBio,
 };

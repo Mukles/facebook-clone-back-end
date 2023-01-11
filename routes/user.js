@@ -15,11 +15,15 @@ const {
   getNewsFeed,
   getFriendList,
   updateDeails,
+  updateBio,
 } = require("../controllers/userController");
 const upload = require("../middleware/fileUpload");
 
 //UPDATE USER
 router.put("/:id", updateUser);
+
+//UPDATE BIO
+router.patch("/bio/:id", updateBio);
 
 //SUGGESTION FRIENDS
 router.get("/suggestions/", suggestionFriends);
