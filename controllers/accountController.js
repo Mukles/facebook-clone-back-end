@@ -6,6 +6,8 @@ const signInAndSignUp = async (req, res) => {
   try {
     const query = await User.findOne({ email }, { posts: 0, provider: 0 });
 
+    console.log({ query });
+
     if (query) {
       res.status(200).json({ user: query });
     } else {

@@ -42,8 +42,6 @@ const updateBio = async (req, res) => {
   const { id: userId } = req.params || {};
   const { bio } = req.body || {};
 
-  console.log({ userId, bio });
-
   try {
     const user = await User.findByIdAndUpdate(
       userId,
@@ -52,7 +50,6 @@ const updateBio = async (req, res) => {
       },
       { new: true }
     );
-    console.log({ user });
     res.status(200).json({ bio: user.bio });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -443,6 +440,78 @@ const updateDeails = async (req, res) => {
   }
 };
 
+const uploadImages = async (req, res) => {
+  try {
+    const { userId } = req.params || {};
+    const images = await Post.find({ userId }, { img: 1 }).limit(9);
+    res.status(200).json(images);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getMutualFriends = async (req, res) => {
+  try {
+    const { user1Id, user2Id } = req.query;
+    const mutualfrineds = await User.aggregate([
+      {
+        $match: {
+          _id: { $in: [user1Id, user2Id] },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "friends",
+          foreignField: "_id",
+          as: "mutualFriends",
+        },
+      },
+      {
+        $project: {
+          mutualFriends: {
+            $filter: {
+              input: "$mutualFriends",
+              as: "friend",
+              cond: {
+                $eq: [
+                  {
+                    $size: {
+                      $setIntersection: ["$$friend.friends", "$friends"],
+                    },
+                  },
+                  2,
+                ],
+              },
+            },
+          },
+          mutualFriendsCount: { $size: "$mutualFriends" },
+        },
+      },
+    ]);
+    res.status(200).json(mutualfrineds);
+  } catch (error) {
+    res.status(500).json({ message: error?.message });
+  }
+};
+
+const getFriends = async (req, res) => {
+  try {
+    const { userId } = req.params || {};
+    const friend = await User.findById(userId)
+      .select("friends")
+      .populate({
+        path: "friends",
+        options: { limit: 9 },
+        select: "-posts",
+      });
+
+    res.status(200).json(friend);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getUser,
   deleteUser,
@@ -460,4 +529,7 @@ module.exports = {
   getFriendList,
   updateDeails,
   updateBio,
+  uploadImages,
+  getMutualFriends,
+  getFriends,
 };

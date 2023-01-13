@@ -16,6 +16,9 @@ const {
   getFriendList,
   updateDeails,
   updateBio,
+  uploadImages,
+  getFriends,
+  getMutualFriends,
 } = require("../controllers/userController");
 const upload = require("../middleware/fileUpload");
 
@@ -101,10 +104,19 @@ router.get("/request/status", getRequestStatus);
 //GET NEWS FEED
 router.get("/newsfeed/:userId", getNewsFeed);
 
+//PATCH USER
+router.patch("/about/:userId", updateDeails);
+
+//GET UPLOADED IMAGES
+router.get("/uploads/:userId", uploadImages);
+
+//GET MUTUIAL FRIENDS
+router.get("/mutual/friends", getMutualFriends);
+
 //GET ALL FRINEDS
 router.get("/friend-list/:userId", getFriendList);
 
-//PATCH USER
-router.patch("/about/:userId", updateDeails);
+//GET FRIENDS
+router.get("/friends/:userId", getFriends);
 
 module.exports = router;
