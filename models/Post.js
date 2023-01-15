@@ -18,10 +18,18 @@ const PostShema = new mongoose.Schema(
     img: {
       type: String,
     },
-    likes: {
-      type: Array,
-      default: [],
-    },
+    likes: [
+      {
+        userId: {
+          type: mongoose.Types.ObjectId,
+          ref: "User",
+        },
+        react: {
+          type: String,
+          enum: ["like", "love", "wow", "haha", "sad", "angry"],
+        },
+      },
+    ],
     comments: [
       {
         type: mongoose.Types.ObjectId,

@@ -7,6 +7,7 @@ const {
   deletePost,
   postUpdateWithImg,
   postUpdateWithoutImg,
+  toggleLike,
 } = require("../controllers/postController");
 const upload = require("../middleware/fileUpload");
 
@@ -35,25 +36,6 @@ router.get(":/id", async (req, res) => {
   }
 });
 
-//LIKE POST
-router.put("/:id/like", async (req, res) => {
-  const { id } = req.params;
-  const { userId } = req.body;
-
-  try {
-    const post = await Post.findById(id);
-    if (!post.likes.includes(userId)) {
-      post.updateOne({ $push: { userId } });
-      res.status(200).json({ message: "The post has been liked" });
-    } else {
-      post.updateOne({ $pull: { userId } });
-      res.status(200).json({ message: "The post has been disliked" });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
 //TIMELINE
 router.get("/newsfeed", async (req, res) => {
   const { userId } = req.body;
@@ -69,5 +51,8 @@ router.get("/newsfeed", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+//TOGGLE REACT
+router.put("/:id/react", toggleLike);
 
 module.exports = router;

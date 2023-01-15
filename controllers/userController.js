@@ -360,6 +360,24 @@ const getNewsFeed = async (req, res) => {
         },
       },
       {
+        $addFields: {
+          "friendsPosts.likeReact": {
+            $arrayElemAt: [
+              {
+                $filter: {
+                  input: "$friendsPosts.likes",
+                  as: "like",
+                  cond: {
+                    $eq: ["$$like.userId", mongoose.Types.ObjectId(userId)],
+                  },
+                },
+              },
+              0,
+            ],
+          },
+        },
+      },
+      {
         $unwind: "$friendsPosts.user",
       },
       {
@@ -369,7 +387,9 @@ const getNewsFeed = async (req, res) => {
       },
       {
         $project: {
-          friendsPosts: 1,
+          friendsPosts: {
+            likes: 0,
+          },
           _id: 0,
         },
       },

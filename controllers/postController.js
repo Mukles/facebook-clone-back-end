@@ -116,6 +116,24 @@ const getTimeline = async (req, res) => {
       { $skip: 0 },
       { $limit: 5 },
       {
+        $addFields: {
+          likeReact: {
+            $arrayElemAt: [
+              {
+                $filter: {
+                  input: "$likes",
+                  as: "like",
+                  cond: {
+                    $eq: ["$$like.userId", mongoose.Types.ObjectId(userId)],
+                  },
+                },
+              },
+              0,
+            ],
+          },
+        },
+      },
+      {
         $lookup: {
           from: "users",
           localField: "userId",
@@ -145,10 +163,44 @@ const getTimeline = async (req, res) => {
   }
 };
 
+//TOGGLE LIKE
+const toggleLike = async (req, res) => {
+  try {
+    const { id } = req.params || {};
+    const { userId, react } = req.body || {};
+    const likes = await Post.findOne({ _id: id, "likes.userId": userId });
+    if (!react) {
+      const updateLike = await Post.findOneAndUpdate(
+        { _id: id, "likes.userId": userId },
+        { $pull: { likes: { userId } } },
+        { new: true }
+      );
+      res.status(200).json(updateLike);
+    } else if (!likes) {
+      const newReact = await Post.findOneAndUpdate(
+        { _id: id },
+        { $push: { likes: { userId, react } } },
+        { new: true }
+      );
+      res.status(200).json(newReact);
+    } else {
+      const updateLike = await Post.findOneAndUpdate(
+        { _id: id, "likes.userId": userId },
+        { $set: { likes: { userId, react } } },
+        { new: true }
+      );
+      res.status(200).json(updateLike);
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   postAdd,
   postUpdateWithImg,
   postUpdateWithoutImg,
   getTimeline,
   deletePost,
+  toggleLike,
 };
