@@ -131,6 +131,62 @@ const getTimeline = async (req, res) => {
               0,
             ],
           },
+          reactCount: {
+            like: {
+              $size: {
+                $filter: {
+                  input: "$likes",
+                  as: "like",
+                  cond: { $eq: ["$$like.react", "like"] },
+                },
+              },
+            },
+            love: {
+              $size: {
+                $filter: {
+                  input: "$likes",
+                  as: "like",
+                  cond: { $eq: ["$$like.react", "love"] },
+                },
+              },
+            },
+            wow: {
+              $size: {
+                $filter: {
+                  input: "$likes",
+                  as: "like",
+                  cond: { $eq: ["$$like.react", "wow"] },
+                },
+              },
+            },
+            haha: {
+              $size: {
+                $filter: {
+                  input: "$likes",
+                  as: "like",
+                  cond: { $eq: ["$$like.react", "haha"] },
+                },
+              },
+            },
+            sad: {
+              $size: {
+                $filter: {
+                  input: "$likes",
+                  as: "like",
+                  cond: { $eq: ["$$like.react", "sad"] },
+                },
+              },
+            },
+            angry: {
+              $size: {
+                $filter: {
+                  input: "$likes",
+                  as: "like",
+                  cond: { $eq: ["$$like.react", "angry"] },
+                },
+              },
+            },
+          },
         },
       },
       {
