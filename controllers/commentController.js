@@ -5,11 +5,24 @@ const { default: mongoose } = require("mongoose");
 const getComments = async (req, res) => {
   try {
     const { postId } = req.params;
+    const page = parseInt(req.query?.page);
+    const skip = parseInt(req.query?.skip);
+    const limit = page ? 5 : 1;
+
+    console.log({ skip });
+
+    const matchCount = await Comment.estimatedDocumentCount({
+      post_id: postId,
+    });
+
     const comments = await Comment.find({ post_id: postId })
       .populate("user")
       .populate("replies.user")
-      .sort({ created_at: -1 });
-    res.status(200).json(comments);
+      .sort({ created_at: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({ comments, size: matchCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -31,16 +44,16 @@ const addComment = async (req, res) => {
         user: userId,
         img,
       }).save();
-
-      res.status(200).json(newComment);
+      const comment = await Comment.findById(newComment._id).populate("user");
+      res.status(200).json(comment);
     } else if (post) {
       const newComment = await new Comment({
         content,
         post_id: postId,
         user: userId,
       }).save();
-
-      res.status(200).json(newComment);
+      const comment = await Comment.findById(newComment._id).populate("user");
+      res.status(200).json(comment);
     } else {
       res.status(404).json({ message: "Post not found" });
     }
@@ -87,15 +100,27 @@ const replyComment = async (req, res) => {
 
       const comment = await Comment.findOneAndUpdate(
         { _id: commentId },
-        { $push: { replies: { content, user: userId, img } } }
+        { $push: { replies: { content, user: userId, img } } },
+        { new: true }
       );
-      res.status(200).json(comment);
+      const populatedComment = await Comment.findById(comment._id).populate({
+        path: "replies.user",
+        model: "User",
+      });
+      res.status(200).josn(populatedComment);
     } else {
-      console.log({ userId });
       const comment = await Comment.findOneAndUpdate(
         { _id: commentId },
-        { $push: { replies: { content, user: userId } } }
-      );
+        {
+          $push: {
+            replies: {
+              $each: [{ content, user: userId }],
+              $position: 0,
+            },
+          },
+        },
+        { new: true, useFindAndModify: false }
+      ).populate({ path: "replies.user", model: "User" });
       res.status(200).json(comment);
     }
   } catch (error) {
