@@ -1,7 +1,6 @@
-const User = require("../models/user");
+const User = require("../models/User");
 const Post = require("../models/Post");
 const { default: mongoose } = require("mongoose");
-const { updateOne } = require("../models/user");
 
 //ADD NEW POST
 const postAdd = async (req, res) => {
@@ -107,14 +106,17 @@ const deletePost = async (req, res) => {
 
 //GET MY TIMELINE
 const getTimeline = async (req, res) => {
-  const { userId } = req.query;
+  const { userId, page } = req.query;
+
+  const limit = 5;
+  const skip = page * limit;
 
   try {
     const posts = await Post.aggregate([
       { $match: { userId: mongoose.Types.ObjectId(userId) } },
       { $sort: { createdAt: -1 } },
-      { $skip: 0 },
-      { $limit: 5 },
+      { $skip: skip },
+      { $limit: limit },
       {
         $addFields: {
           likeReact: {
@@ -213,7 +215,11 @@ const getTimeline = async (req, res) => {
       },
     ]);
 
-    res.status(200).json(posts);
+    const matchCount = await Post.countDocuments({
+      userId: mongoose.Types.ObjectId(userId),
+    });
+
+    res.status(200).json({ posts, size: matchCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

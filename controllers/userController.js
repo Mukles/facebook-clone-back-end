@@ -520,7 +520,10 @@ const updateDeails = async (req, res) => {
 const uploadImages = async (req, res) => {
   try {
     const { userId } = req.params || {};
-    const images = await Post.find({ userId }, { img: 1 }).limit(9);
+    const images = await Post.find(
+      { userId, img: { $exists: true, $ne: null } },
+      { img: 1 }
+    ).limit(9);
     res.status(200).json(images);
   } catch (error) {
     res.status(500).json({ message: error.message });

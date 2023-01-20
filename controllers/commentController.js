@@ -1,6 +1,5 @@
 const Post = require("../models/Post");
 const Comment = require("../models/comment");
-const { default: mongoose } = require("mongoose");
 
 const getComments = async (req, res) => {
   try {
@@ -9,9 +8,7 @@ const getComments = async (req, res) => {
     const skip = parseInt(req.query?.skip);
     const limit = page ? 5 : 1;
 
-    console.log({ skip });
-
-    const matchCount = await Comment.estimatedDocumentCount({
+    const matchCount = await Comment.countDocuments({
       post_id: postId,
     });
 

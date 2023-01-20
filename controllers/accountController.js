@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const User = require("../models/User");
 
 const signInAndSignUp = async (req, res) => {
   const email = req.params.email;
