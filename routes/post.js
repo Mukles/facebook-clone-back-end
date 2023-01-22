@@ -1,4 +1,4 @@
-const Post = require("../models/post");
+const Post = require("../models/Post");
 const User = require("../models/User");
 const router = require("express").Router();
 const {
