@@ -4,12 +4,33 @@ const signInAndSignUp = async (req, res) => {
   const email = req.params.email;
   const { user } = req.body || {};
   try {
-    const query = await User.findOne({ email }, { posts: 0, provider: 0 });
-
-    console.log({ query });
-
-    if (query) {
-      res.status(200).json({ user: query });
+    const query = await User.aggregate([
+      { $match: { email: email } },
+      {
+        $limit: 1,
+      },
+      {
+        $addFields: {
+          numberOfFriends: { $size: "$friends" },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          foreignField: "friends",
+          localField: "_id",
+          as: "friends",
+        },
+      },
+      {
+        $project: {
+          posts: 0,
+          provider: 0,
+        },
+      },
+    ]);
+    if (query.length) {
+      res.status(200).json({ user: query.length ? query[0] : null });
     } else {
       const firstName = user?.firstName;
       const lastName = user?.lastName;
@@ -17,6 +38,8 @@ const signInAndSignUp = async (req, res) => {
         ...user,
         userName: user.userName || firstName + " " + lastName,
       }).save();
+
+      console.log("fuck you man mothercoad.");
 
       const createdUser = {
         _id: result._id,
@@ -27,7 +50,6 @@ const signInAndSignUp = async (req, res) => {
         gender: result.gender,
         isAdmin: result.isAdmin,
       };
-
       res
         .status(200)
         .json({ user: createdUser, message: "user added sucessfully" });

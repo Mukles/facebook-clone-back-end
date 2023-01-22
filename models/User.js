@@ -8,6 +8,7 @@ const userShema = new mongoose.Schema(
       min: 3,
       max: 20,
     },
+    searchHistory: [],
     email: { unique: true, type: String, require: true, max: 50 },
     dateOfBrith: { type: String },
     profilePicture: {

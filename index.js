@@ -11,6 +11,7 @@ const userRoute = require("./routes/user");
 const postRoute = require("./routes/post");
 const conversationRoute = require("./routes/conversation");
 const commentRoute = require("./routes/comment");
+const searchRoute = require("./routes/search");
 
 const { port, cookie_secret, mongoUrl, clientUrl } = require("./config");
 const {
@@ -53,6 +54,7 @@ app.use("/api/post", postRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/conversation", conversationRoute);
 app.use("/api/comment", commentRoute);
+app.use("/api/search", searchRoute);
 
 async function main() {
   await mongoose.connect(mongoUrl);

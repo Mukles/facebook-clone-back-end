@@ -106,16 +106,14 @@ const deletePost = async (req, res) => {
 
 //GET MY TIMELINE
 const getTimeline = async (req, res) => {
-  const { userId, page } = req.query;
-
+  const { userId, page, skip } = req.query;
   const limit = 5;
-  const skip = page * limit;
 
   try {
     const posts = await Post.aggregate([
       { $match: { userId: mongoose.Types.ObjectId(userId) } },
       { $sort: { createdAt: -1 } },
-      { $skip: skip },
+      { $skip: 0 },
       { $limit: limit },
       {
         $addFields: {

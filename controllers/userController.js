@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const User = require("../models/User");
 const Post = require("../models/Post");
 const FriendRequest = require("../models/friendRequest");
 const { default: mongoose } = require("mongoose");
@@ -332,7 +332,9 @@ const getRequestStatus = async (req, res) => {
 
 const getNewsFeed = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params || {};
+    const { skip } = req.query || {};
+    const limit = 5;
 
     const latestPost = await User.aggregate([
       {
@@ -349,6 +351,12 @@ const getNewsFeed = async (req, res) => {
         },
       },
       {
+        $project: {
+          friendsPosts: 1,
+          totalCount: { $size: "$friendsPosts" },
+        },
+      },
+      {
         $unwind: "$friendsPosts",
       },
       {
@@ -359,7 +367,6 @@ const getNewsFeed = async (req, res) => {
           as: "friendsPosts.user",
         },
       },
-
       {
         $addFields: {
           "friendsPosts.likeReact": {
@@ -451,14 +458,14 @@ const getNewsFeed = async (req, res) => {
         },
       },
       {
-        $skip: 0,
+        $skip: parseInt(skip),
       },
       {
-        $limit: 5,
+        $limit: limit,
       },
     ]);
 
-    res.status(200).json(latestPost);
+    res.status(200).json({ posts: latestPost, size: 10 });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
