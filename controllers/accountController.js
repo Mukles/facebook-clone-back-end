@@ -30,7 +30,7 @@ const signInAndSignUp = async (req, res) => {
       },
     ]);
     if (query.length) {
-      res.status(200).json({ user: query.length ? query[0] : null });
+      res.status(200).json({ user: query.length ? query[0] : {} });
     } else {
       const firstName = user?.firstName;
       const lastName = user?.lastName;
@@ -39,20 +39,7 @@ const signInAndSignUp = async (req, res) => {
         userName: user.userName || firstName + " " + lastName,
       }).save();
 
-      console.log("fuck you man mothercoad.");
-
-      const createdUser = {
-        _id: result._id,
-        bio: result.bio,
-        userName: result.userName,
-        email: result.email,
-        dateOfBrith: result.dateOfBrith,
-        gender: result.gender,
-        isAdmin: result.isAdmin,
-      };
-      res
-        .status(200)
-        .json({ user: createdUser, message: "user added sucessfully" });
+      res.status(200).json({ user: result, message: "user added sucessfully" });
     }
   } catch (error) {
     res.status(200).json({ message: error.message });
