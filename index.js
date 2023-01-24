@@ -48,10 +48,6 @@ app.use(
 // set static folder
 app.use(express.static(path.join(__dirname, "uploads")));
 
-app.get("/hello", (req, res) => {
-  res.status(200).json({ message: "hellow world" });
-});
-
 app.use(authCheck);
 app.use("/api/user", userRoute);
 app.use("/api/post", postRoute);

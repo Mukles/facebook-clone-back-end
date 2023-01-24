@@ -7,9 +7,6 @@ const signInAndSignUp = async (req, res) => {
     const query = await User.aggregate([
       { $match: { email: email } },
       {
-        $limit: 1,
-      },
-      {
         $addFields: {
           numberOfFriends: { $size: "$friends" },
         },
@@ -39,7 +36,10 @@ const signInAndSignUp = async (req, res) => {
         userName: user.userName || firstName + " " + lastName,
       }).save();
 
-      res.status(200).json({ user: result, message: "user added sucessfully" });
+      res.status(200).json({
+        user: { ...result._doc, numberOfFriends: 0 },
+        message: "user added sucessfully",
+      });
     }
   } catch (error) {
     res.status(200).json({ message: error.message });

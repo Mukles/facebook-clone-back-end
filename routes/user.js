@@ -19,6 +19,7 @@ const {
   uploadImages,
   getFriends,
   getMutualFriends,
+  unFreindRequest,
 } = require("../controllers/userController");
 const upload = require("../middleware/fileUpload");
 
@@ -97,6 +98,9 @@ router.put("/request/accept/:requestId", accpectFriendRequest);
 
 //DELELE FIREND REQUEST
 router.delete("/request/delete/:requestId", deleteFriendRequest);
+
+// UNFRIEND USER REQUEST
+router.delete("/request/unfriend/:requestId", unFreindRequest);
 
 //GET FIREND REQUEST STATUS
 router.get("/request/status", getRequestStatus);

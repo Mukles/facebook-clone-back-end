@@ -5,11 +5,30 @@ const { default: mongoose } = require("mongoose");
 
 const getUser = async (req, res) => {
   try {
-    const user = await User.findOne(
-      { _id: req.params.id },
-      { posts: 0, provider: 0 }
-    );
-    res.status(200).json(user);
+    const { id } = req.params || {};
+    const query = await User.aggregate([
+      { $match: { _id: mongoose.Types.ObjectId(id) } },
+      {
+        $addFields: {
+          numberOfFriends: { $size: "$friends" },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          foreignField: "friends",
+          localField: "_id",
+          as: "friends",
+        },
+      },
+      {
+        $project: {
+          posts: 0,
+          provider: 0,
+        },
+      },
+    ]);
+    res.status(200).json(query.length ? query[0] : {});
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -234,13 +253,11 @@ const cancelFriendRequest = async (req, res) => {
     const { requestId } = req.params;
     const { userId } = req.body;
 
-    await FriendRequest.findOneAndUpdate(
-      {
-        _id: mongoose.Types.ObjectId(requestId),
-        sender: mongoose.Types.ObjectId(userId),
-      },
-      { $set: { status: "cancelled" } }
-    );
+    await FriendRequest.findOneAndDelete({
+      _id: mongoose.Types.ObjectId(requestId),
+      sender: mongoose.Types.ObjectId(userId),
+    });
+
     res.status(200).json({ message: "friend request canceled successfullly!" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -275,11 +292,33 @@ const deleteFriendRequest = async (req, res) => {
   try {
     const { requestId } = req.params || {};
     const { userId } = req.body || {};
-    const d = await FriendRequest.findOneAndDelete({
+    await FriendRequest.findOneAndDelete({
       _id: requestId,
       recipient: userId,
     });
     res.status(200).json({ message: "Request deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const unFreindRequest = async (req, res) => {
+  try {
+    const { requestId } = req.params || {};
+    const { userId, friendId } = req.body || {};
+    await FriendRequest.findOneAndDelete({
+      _id: requestId,
+    });
+
+    await User.findOneAndUpdate(
+      { _id: userId },
+      { $pull: { friends: friendId } }
+    );
+    await User.findOneAndUpdate(
+      { _id: friendId },
+      { $pull: { friends: userId } }
+    );
+    res.status(200).json({ message: "Unfriend successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -611,6 +650,7 @@ module.exports = {
   getRequestList,
   accpectFriendRequest,
   deleteFriendRequest,
+  unFreindRequest,
   getRequestStatus,
   getNewsFeed,
   getFriendList,
