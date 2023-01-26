@@ -579,43 +579,62 @@ const uploadImages = async (req, res) => {
 const getMutualFriends = async (req, res) => {
   try {
     const { user1Id, user2Id } = req.query;
+    const objectId = mongoose.Types.ObjectId;
     const mutualfrineds = await User.aggregate([
       {
         $match: {
-          _id: { $in: [user1Id, user2Id] },
+          _id: {
+            $in: [objectId(user1Id), objectId(user2Id)],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: 0,
+          set1: {
+            $first: "$friends",
+          },
+          set2: {
+            $last: "$friends",
+          },
+        },
+      },
+      {
+        $addFields: {
+          mutual: {
+            $setIntersection: ["$set1", "$set2"],
+          },
+          count: {
+            $size: {
+              $setIntersection: ["$set1", "$set2"],
+            },
+          },
         },
       },
       {
         $lookup: {
           from: "users",
-          localField: "friends",
+          localField: "mutual",
           foreignField: "_id",
-          as: "mutualFriends",
+          as: "userDetails",
         },
+      },
+
+      {
+        $skip: 0,
+      },
+      {
+        $limit: 9,
       },
       {
         $project: {
-          mutualFriends: {
-            $filter: {
-              input: "$mutualFriends",
-              as: "friend",
-              cond: {
-                $eq: [
-                  {
-                    $size: {
-                      $setIntersection: ["$$friend.friends", "$friends"],
-                    },
-                  },
-                  2,
-                ],
-              },
-            },
-          },
-          mutualFriendsCount: { $size: "$mutualFriends" },
+          count: 1,
+          userDetails: 1,
         },
       },
     ]);
-    res.status(200).json(mutualfrineds);
+
+    res.status(200).json(mutualfrineds[0]);
   } catch (error) {
     res.status(500).json({ message: error?.message });
   }
@@ -624,7 +643,7 @@ const getMutualFriends = async (req, res) => {
 const getFriends = async (req, res) => {
   try {
     const { userId } = req.params || {};
-    const friend = await User.findById(userId)
+    const { friends } = await User.findById(userId)
       .select("friends")
       .populate({
         path: "friends",
@@ -632,7 +651,7 @@ const getFriends = async (req, res) => {
         select: "-posts",
       });
 
-    res.status(200).json(friend);
+    res.status(200).json(friends);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

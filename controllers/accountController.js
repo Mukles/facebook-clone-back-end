@@ -12,14 +12,6 @@ const signInAndSignUp = async (req, res) => {
         },
       },
       {
-        $lookup: {
-          from: "users",
-          foreignField: "friends",
-          localField: "_id",
-          as: "friends",
-        },
-      },
-      {
         $project: {
           posts: 0,
           provider: 0,
