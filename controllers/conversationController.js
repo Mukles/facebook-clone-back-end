@@ -10,7 +10,7 @@ const addConversation = async (req, res) => {
     });
 
     if (conversation) {
-      const updatedConversation = await Conversation.updateOne(
+      const updatedConversation = await Conversation.findOneAndUpdate(
         { participants: conversation.participants },
         {
           $set: {
@@ -22,8 +22,10 @@ const addConversation = async (req, res) => {
         },
         {
           new: true,
+          upsert: true,
+          fields: { messages: { $slice: -1 } },
         }
-      );
+      ).populate("participants");
       res.status(200).json(updatedConversation);
     } else {
       const newConversation = await new Conversation({
@@ -84,13 +86,30 @@ const getConversations = async (req, res) => {
 
 const getMessages = async (req, res) => {
   try {
+    const limit = 8;
     const { sender, recipient } = req.query || {};
-    console.log("sender", recipient);
+    let skip = !req.query.skip ? -limit : -(parseInt(req.query.skip) + limit);
+    console.log({ skip });
     const objectId = mongoose.Types.ObjectId;
+
     const messages = await Conversation.aggregate([
       {
         $match: {
           participants: { $all: [objectId(sender), objectId(recipient)] },
+        },
+      },
+      {
+        $sort: { "messages.createdAt": -1 },
+      },
+      {
+        $addFields: {
+          count: { $size: "$messages" },
+        },
+      },
+      {
+        $project: {
+          messages: { $slice: ["$messages", skip, limit] },
+          count: 1,
         },
       },
       {
@@ -108,19 +127,8 @@ const getMessages = async (req, res) => {
         $group: {
           _id: "$_id",
           messages: { $push: "$messages" },
+          count: { $first: "$count" },
         },
-      },
-      {
-        $project: { messages: 1 },
-      },
-      {
-        $sort: { "messages.createdAt": -1 },
-      },
-      {
-        $skip: 0,
-      },
-      {
-        $limit: 5,
       },
     ]);
 
