@@ -33,7 +33,11 @@ const addConversation = async (req, res) => {
         lastMessage: { sender, message, createdAt: Date.now() },
         messages: [{ message, sender }],
       }).save();
-      res.status(200).json(newConversation);
+
+      const conversationWithDetails = await Conversation.findOne({
+        _id: newConversation._id,
+      }).populate("participants");
+      res.status(200).json(conversationWithDetails);
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -132,7 +136,7 @@ const getMessages = async (req, res) => {
       },
     ]);
 
-    res.status(200).json(messages[0]);
+    res.status(200).json(messages[0] || { messages: [], count: 0 });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

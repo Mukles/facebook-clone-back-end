@@ -1,5 +1,6 @@
 const Post = require("../models/Post");
 const Comment = require("../models/comment");
+const mongoose = require("mongoose");
 
 const getComments = async (req, res) => {
   try {
@@ -12,6 +13,22 @@ const getComments = async (req, res) => {
       post_id: postId,
     });
 
+    const toatalCount = await Comment.aggregate([
+      {
+        $match: { post_id: mongoose.Types.ObjectId(postId) },
+      },
+      {
+        $group: {
+          _id: "$post_id",
+          count: {
+            $sum: {
+              $add: [1, { $size: "$replies" }],
+            },
+          },
+        },
+      },
+    ]);
+
     const comments = await Comment.find({ post_id: postId })
       .populate("user")
       .populate("replies.user")
@@ -19,7 +36,11 @@ const getComments = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    res.status(200).json({ comments, size: matchCount });
+    res.status(200).json({
+      comments,
+      size: matchCount,
+      toatalCount: toatalCount.length ? toatalCount[0].count : 0,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

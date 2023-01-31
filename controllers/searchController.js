@@ -17,24 +17,28 @@ const getHistory = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const history = await User.aggregate([
-      {
-        $match: { _id: mongoose.Types.ObjectId(userId) },
-      },
-      {
-        $addFields: {
-          searchHistorys: {
-            $filter: {
-              input: "$searchHistory",
-              as: "searchItem",
-              cond: { $eq: [mongoose.isValidObjectId("$$searchItem"), true] },
-            },
-          },
-        },
-      },
-    ]);
+    const searchHistorys = await User.findOne(
+      { _id: userId },
+      { searchHistory: 1 }
+    );
+    const histories = searchHistorys.searchHistory.slice(0, 12);
+    const searchHistorysWithDetails = await Promise.all(
+      histories.map(async (item) => {
+        if (
+          mongoose.isObjectIdOrHexString(item) &&
+          mongoose.isValidObjectId(item)
+        ) {
+          const user = await User.findOne({
+            _id: mongoose.Types.ObjectId(item),
+          });
+          return user;
+        } else {
+          return item;
+        }
+      })
+    );
 
-    res.status(200).json(history);
+    res.status(200).json(searchHistorysWithDetails);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -46,7 +50,7 @@ const addHistory = async (req, res) => {
     const { search } = req.body;
     const user = await User.findOneAndUpdate(
       { _id: userId },
-      { $push: { searchHistory: search } }
+      { $push: { searchHistory: { $each: [search], $position: 0 } } }
     );
 
     res.status(200).json(user);
