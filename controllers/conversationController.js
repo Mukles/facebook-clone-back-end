@@ -6,7 +6,7 @@ const addConversation = async (req, res) => {
     const { sender, recipient, message } = req.body;
 
     const conversation = await Conversation.findOne({
-      participants: { $in: [sender, recipient] },
+      participants: { $all: [sender, recipient] },
     });
 
     if (conversation) {
